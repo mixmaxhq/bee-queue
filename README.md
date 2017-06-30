@@ -1,5 +1,5 @@
 <a name="top"></a>
-![bee-queue logo](https://raw.githubusercontent.com/LewisJEllis/bee-queue/master/bee-queue.png)
+![bee-queue logo](https://raw.githubusercontent.com/mixmaxhq/bee-queue/master/bee-queue.png)
 [![NPM Version][npm-image]][npm-url] [![Build Status][travis-image]][travis-url] [![Coverage Status][coveralls-image]][coveralls-url]
 
 A simple, fast, robust job/task queue for Node.js, backed by Redis.
@@ -62,14 +62,14 @@ You'll also need [Redis 2.8+](http://redis.io/topics/quickstart) running somewhe
 - [API Reference](#api-reference)
 - [Under The Hood](#under-the-hood)
 - [Contributing](#contributing)
-- [License](https://github.com/LewisJEllis/bee-queue/blob/master/LICENSE)
+- [License](https://github.com/mixmaxhq/bee-queue/blob/master/LICENSE)
 
 # Motivation
 Celery is for Python, and Resque is for Ruby, but [Kue](https://github.com/LearnBoost/kue) and [Bull](https://github.com/OptimalBits/bull) already exist for Node, and they're good at what they do, so why does Bee-Queue also need to exist?
 
 In short: we needed to mix and match things that Kue does well with things that Bull does well, and we needed to squeeze out more performance. There's also a [long version](https://github.com/LewisJEllis/bee-queue/wiki/Origin) with more details.
 
-Bee-Queue starts by combining Bull's simplicity and robustness with Kue's ability to send events back to job creators, then focuses heavily on minimizing overhead, and finishes by being strict about [code quality](https://github.com/LewisJEllis/bee-queue/blob/master/.eslintrc) and [testing](https://coveralls.io/r/LewisJEllis/bee-queue?branch=master). It compromises on breadth of features, so there are certainly cases where Kue or Bull might be preferable (see [Contributing](#contributing)).
+Bee-Queue starts by combining Bull's simplicity and robustness with Kue's ability to send events back to job creators, then focuses heavily on minimizing overhead, and finishes by being strict about [code quality](https://github.com/mixmaxhq/bee-queue/blob/master/.eslintrc) and [testing](https://coveralls.io/r/mixmaxhq/bee-queue?branch=master). It compromises on breadth of features, so there are certainly cases where Kue or Bull might be preferable (see [Contributing](#contributing)).
 
 Bull and Kue do things really well and deserve a lot of credit. Bee-Queue borrows ideas from both, and Bull was an especially invaluable reference during initial development.
 
@@ -81,7 +81,7 @@ Bee-Queue is like a bee because it:
 - something something "worker bees"
 
 # Benchmarks
-![benchmark chart](https://raw.githubusercontent.com/LewisJEllis/bee-queue/master/benchmark/benchmark-chart.png)
+![benchmark chart](https://raw.githubusercontent.com/mixmaxhq/bee-queue/master/benchmark/benchmark-chart.png)
 
 These basic benchmarks ran 10,000 jobs through each library, at varying levels of concurrency, with io.js 2.2.1 and Redis 3.0.2 running directly on a 13" MBPr. The numbers shown are averages of 3 runs; the raw data collected and code used are available in the benchmark folder.
 
@@ -465,13 +465,6 @@ Reports job progress when called within a handler function. Causes a `progress` 
 
 ### Defaults
 
-All methods with an optional callback field will use the following default:
-```javascript
-var defaultCb = function (err) {
-  if (err) throw err;
-};
-```
-
 Defaults for Queue `settings` live in `lib/defaults.js`. Changing that file will change Bee-Queue's default behavior.
 
 # Under the hood
@@ -509,9 +502,9 @@ Some of these could be worthwhile additions; please comment if you're interested
 
 You'll need a local redis server to run the tests. Note that running them will delete any keys that start with `bq:test:`.
 
-[npm-image]: https://img.shields.io/npm/v/bee-queue.svg?style=flat
-[npm-url]: https://www.npmjs.com/package/bee-queue
-[travis-image]: https://img.shields.io/travis/LewisJEllis/bee-queue.svg?style=flat
-[travis-url]: https://travis-ci.org/LewisJEllis/bee-queue
-[coveralls-image]: https://coveralls.io/repos/LewisJEllis/bee-queue/badge.svg?branch=master
-[coveralls-url]: https://coveralls.io/r/LewisJEllis/bee-queue?branch=master
+[npm-image]: https://img.shields.io/npm/v/%40mixmaxhq%2Fbee-queue.svg?style=flat
+[npm-url]: https://www.npmjs.com/package/@mixmaxhq/bee-queue
+[travis-image]: https://img.shields.io/travis/mixmaxhq/bee-queue.svg?style=flat
+[travis-url]: https://travis-ci.org/mixmaxhq/bee-queue
+[coveralls-image]: https://coveralls.io/repos/mixmaxhq/bee-queue/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/r/mixmaxhq/bee-queue?branch=master
