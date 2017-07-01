@@ -457,6 +457,22 @@ describe('Queue', function () {
         });
       });
     });
+
+    it('should get a job with a specified id', function () {
+      this.queue = new Queue('test', {
+        getEvents: false,
+        sendEvents: false,
+        storeJobs: false,
+      });
+
+      return this.queue.createJob({foo: 'bar'}).setId('amazingjob').save()
+        .then(() => this.queue.getJob('amazingjob'))
+        .then((job) => {
+          assert.ok(job);
+          assert.strictEqual(job.id, 'amazingjob');
+          assert.deepEqual(job.data, {foo: 'bar'});
+        });
+    });
   });
 
   describe('Processing jobs', function () {
@@ -1114,9 +1130,8 @@ describe('Queue', function () {
       ]).then(() => deadQueue.process(processJobs)).catch(done);
     });
 
-    it('resets and processes jobs from multiple stalled queues', function (done) {
+    it('resets and processes jobs from multiple stalled queues', function () {
       const final = helpers.deferred(), finalDone = final.defer();
-      helpers.asCallback(final, done);
 
       const processJobs = () => {
         this.queue = new Queue('test', {
@@ -1138,7 +1153,7 @@ describe('Queue', function () {
           stallInterval: 0
         });
 
-        // Disable stall prevention for the dead queue.
+        // Disable stall prevention for the queue.
         sinon.stub(queue, '_preventStall', () => Promise.resolve());
 
         final.catch(() => {}).then(() => queue.close());
@@ -1155,9 +1170,13 @@ describe('Queue', function () {
       }
 
       Promise.all(made).then(() => processJobs()).catch(finalDone);
+
+      return final;
     });
 
-    xit('resets and processes stalled jobs from concurrent processor', function (done) {
+    it('resets and processes stalled jobs from concurrent processor', function () {
+      const final = helpers.deferred(), finalDone = final.defer();
+
       var deadQueue = new Queue('test', {
         stallInterval: 0
       });
@@ -1165,35 +1184,44 @@ describe('Queue', function () {
       var concurrency = 5;
       var numJobs = 10;
 
+      final.then(() => deadQueue.close());
+
+      // Disable stall prevention for the dead queue.
+      sinon.stub(deadQueue, '_preventStall', () => Promise.resolve());
+
       const processJobs = () => {
         this.queue = new Queue('test', {
           stallInterval: 0
         });
-        this.queue.checkStalledJobs(() => {
+        this.queue.checkStalledJobs((err) => {
+          if (err) return finalDone(err);
           this.queue.process((job, jobDone) => {
             counter += 1;
             jobDone();
-            if (counter === numJobs) {
-              done();
-            }
+            if (counter < numJobs) return;
+            assert.strictEqual(counter, numJobs);
+            finalDone();
           });
         });
       };
 
-      var processAndClose = function () {
-        deadQueue.process(concurrency, function () {
+      const processAndClose = () => {
+        deadQueue.process(concurrency, () => {
           // wait for it to get all spooled up...
           if (deadQueue.running === concurrency) {
-            deadQueue.close(processJobs);
+            processJobs();
           }
         });
       };
 
-      var reportAdded = barrier(numJobs, processAndClose);
-
-      for (var i = 0; i < numJobs; i++) {
-        deadQueue.createJob({count: i}).save(reportAdded);
+      const made = [];
+      for (let i = 0; i < numJobs; i++) {
+        made.push(deadQueue.createJob({count: i}).save());
       }
+
+      Promise.all(made).then(() => processAndClose()).catch(finalDone);
+
+      return final;
     });
 
     xit('should reset without a callback', function (done) {
