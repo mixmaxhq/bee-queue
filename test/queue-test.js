@@ -199,6 +199,25 @@ describe('Queue', function () {
             }
           });
       });
+
+      it('should stop the check timer', function () {
+        this.queue = new Queue('test', {
+          stallInterval: 100
+        });
+
+        this.queue.checkStalledJobs(50);
+
+        return helpers.delay(25)
+          .then(() => {
+            this.spy = sinon.spy(this.queue, 'checkStalledJobs');
+            return this.queue.close();
+          })
+          .then(() => helpers.delay(50))
+          .then(() => {
+            assert.isFalse(this.spy.called);
+            this.spy.restore();
+          });
+      });
     });
 
     it('should not error on close', function (done) {
@@ -1581,25 +1600,6 @@ describe('Queue', function () {
         assert.ok(job);
         this.queue.destroy(checkForKeys);
       });
-    });
-
-    it('should stop the check timer', function () {
-      this.queue = new Queue('test', {
-        stallInterval: 100
-      });
-
-      this.queue.checkStalledJobs(50);
-
-      return helpers.delay(25)
-        .then(() => {
-          this.spy = sinon.spy(this.queue, 'checkStalledJobs');
-          return this.queue.destroy();
-        })
-        .then(() => helpers.delay(50))
-        .then(() => {
-          assert.isFalse(this.spy.called);
-          this.spy.restore();
-        });
     });
   });
 
