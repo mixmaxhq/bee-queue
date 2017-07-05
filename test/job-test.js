@@ -1,13 +1,12 @@
-var Job = require('../lib/job');
-var Queue = require('../lib/queue');
+const Job = require('../lib/job');
+const Queue = require('../lib/queue');
 const helpers = require('../lib/helpers');
 
-var chai = require('chai');
-var assert = chai.assert;
+const assert = require('chai').assert;
 
 describe('Job', function () {
-  var data = {foo: 'bar'};
-  var options = {test: 1};
+  const data = {foo: 'bar'};
+  const options = {test: 1};
 
   function clearKeys(done) {
     this.queue.client.keys(this.queue.toKey('*'), (err, keys) => {
@@ -24,7 +23,7 @@ describe('Job', function () {
     this.queue = new Queue('test');
 
     this.makeJob = () => {
-      var job = this.queue.createJob(data);
+      const job = this.queue.createJob(data);
       job.options = options;
       return job.save();
     };
@@ -51,7 +50,7 @@ describe('Job', function () {
 
   describe('Chaining', function () {
     it('sets retries', function () {
-      var job = this.queue.createJob({foo: 'bar'}).retries(2);
+      const job = this.queue.createJob({foo: 'bar'}).retries(2);
       assert.strictEqual(job.options.retries, 2);
     });
 
@@ -62,7 +61,7 @@ describe('Job', function () {
     });
 
     it('sets timeout', function () {
-      var job = this.queue.createJob({foo: 'bar'}).timeout(5000);
+      const job = this.queue.createJob({foo: 'bar'}).timeout(5000);
       assert.strictEqual(job.options.timeout, 5000);
     });
 

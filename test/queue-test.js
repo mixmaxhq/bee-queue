@@ -1,12 +1,10 @@
+const Queue = require('../lib/queue');
 
-var Queue = require('../lib/queue');
-var barrier = require('../lib/helpers').barrier;
-
-var sinon = require('sinon');
-var chai = require('chai');
-var assert = chai.assert;
+const sinon = require('sinon');
+const assert = require('chai').assert;
 
 const helpers = require('../lib/helpers');
+const barrier = helpers.barrier;
 
 describe('Queue', function () {
   const pqueue = new Queue('test', {
@@ -660,9 +658,10 @@ describe('Queue', function () {
 
     it('processes a job that auto-retries', function (done) {
       this.queue = new Queue('test');
-      var failCount = 0;
-      var retries = 1;
-      var failMsg = 'failing to auto-retry...';
+      const retries = 1;
+      const failMsg = 'failing to auto-retry...';
+
+      let failCount = 0;
 
       this.queue.process((job, jobDone) => {
         assert.strictEqual(job.data.foo, 'bar');
@@ -693,8 +692,9 @@ describe('Queue', function () {
 
     it('processes a job that times out and auto-retries', function (done) {
       this.queue = new Queue('test');
-      var failCount = 0;
-      var retries = 1;
+      const retries = 1;
+
+      let failCount = 0;
 
       this.queue.process((job, jobDone) => {
         assert.strictEqual(job.data.foo, 'bar');
@@ -756,8 +756,9 @@ describe('Queue', function () {
 
     it('processes many jobs in a row with one processor', function (done) {
       this.queue = new Queue('test');
-      var counter = 0;
-      var numJobs = 20;
+      const numJobs = 20;
+
+      let counter = 0;
 
       this.queue.process((job, jobDone) => {
         assert.strictEqual(job.data.count, counter);
@@ -768,16 +769,17 @@ describe('Queue', function () {
         }
       });
 
-      for (var i = 0; i < numJobs; i++) {
+      for (let i = 0; i < numJobs; i++) {
         this.queue.createJob({count: i}).save();
       }
     });
 
     it('processes many jobs with one concurrent processor', function (done) {
       this.queue = new Queue('test');
-      var counter = 0;
-      var concurrency = 5;
-      var numJobs = 20;
+      const concurrency = 5;
+      const numJobs = 20;
+
+      let counter = 0;
 
       this.queue.process(concurrency, (job, jobDone) => {
         assert.isTrue(this.queue.running <= concurrency);
@@ -791,16 +793,17 @@ describe('Queue', function () {
         }, 10);
       });
 
-      for (var i = 0; i < numJobs; i++) {
+      for (let i = 0; i < numJobs; i++) {
         this.queue.createJob({count: i}).save();
       }
     });
 
     it('processes many randomly delayed jobs with one concurrent processor', function (done) {
       this.queue = new Queue('test');
-      var counter = 0;
-      var concurrency = 5;
-      var numJobs = 20;
+      const concurrency = 5;
+      const numJobs = 20;
+
+      let counter = 0;
 
       this.queue.process(concurrency, (job, jobDone) => {
         assert.isTrue(this.queue.running <= concurrency);
@@ -822,28 +825,32 @@ describe('Queue', function () {
 
     it('processes many jobs with multiple processors', function (done) {
       this.queue = new Queue('test');
-      var processors = [
+      const processors = [
         new Queue('test'),
         new Queue('test'),
         new Queue('test')
       ];
-      var counter = 0;
-      var numJobs = 20;
-      var processed = new Array(numJobs);
+      const numJobs = 20;
+      const processed = new Set();
+
+      let counter = 0;
 
       const handleJob = (job, jobDone) => {
         jobDone();
       };
 
       const success = (job) => {
+        if (processed.has(job.data.count)) {
+          assert.fail('job already processed');
+        }
+        processed.add(job.data.count);
         counter++;
-        processed[job.data.count] = true;
 
         if (counter < numJobs) return;
         assert.strictEqual(counter, numJobs);
 
         for (let i = 0; i < numJobs; i++) {
-          assert.isTrue(processed[i]);
+          assert.isTrue(processed.has(i));
         }
         helpers.asCallback(Promise.all(processors.map((queue) => queue.close())), done);
       };
@@ -852,7 +859,7 @@ describe('Queue', function () {
         queue.process(handleJob).on('succeeded', success);
       });
 
-      for (var i = 0; i < numJobs; i++) {
+      for (let i = 0; i < numJobs; i++) {
         this.queue.createJob({count: i}).save();
       }
     });
@@ -1160,7 +1167,7 @@ describe('Queue', function () {
         });
         this.queue.checkStalledJobs((err) => {
           if (err) return finalDone(err);
-          var reportDone = barrier(5, finalDone);
+          const reportDone = barrier(5, finalDone);
           this.queue.process((job, jobDone) => {
             assert.strictEqual(job.data.foo, 'bar');
             jobDone();
@@ -1198,12 +1205,13 @@ describe('Queue', function () {
     it('resets and processes stalled jobs from concurrent processor', function () {
       const final = helpers.deferred(), finalDone = final.defer();
 
-      var deadQueue = new Queue('test', {
+      const deadQueue = new Queue('test', {
         stallInterval: 0
       });
-      var counter = 0;
-      var concurrency = 5;
-      var numJobs = 10;
+      const concurrency = 5;
+      const numJobs = 10;
+
+      let counter = 0;
 
       final.then(() => deadQueue.close());
 
@@ -1293,7 +1301,7 @@ describe('Queue', function () {
         this.queue = new Queue('test', {
           stallInterval: 0
         });
-        var reportDone = barrier(6, done);
+        const reportDone = barrier(6, done);
         this.queue.checkStalledJobs(10, reportDone);
         setTimeout(() => {
           this.queue.process((job, jobDone) => {
@@ -1370,10 +1378,10 @@ describe('Queue', function () {
 
     it('emits a job succeeded event', function (done) {
       this.queue = new Queue('test');
-      var worker = new Queue('test');
-      var queueEvent = false;
+      const worker = new Queue('test');
+      let queueEvent = false;
 
-      var job = this.queue.createJob({foo: 'bar'});
+      const job = this.queue.createJob({foo: 'bar'});
       job.once('succeeded', (result) => {
         assert.isTrue(queueEvent);
         assert.strictEqual(result, 'barbar');
@@ -1393,8 +1401,8 @@ describe('Queue', function () {
 
     it('emits a job succeeded event with no result', function (done) {
       this.queue = new Queue('test');
-      var worker = new Queue('test');
-      var queueEvent = false;
+      const worker = new Queue('test');
+      let queueEvent = false;
 
       const job = this.queue.createJob({foo: 'bar'});
       job.on('succeeded', (result) => {
@@ -1416,10 +1424,10 @@ describe('Queue', function () {
 
     it('emits a job failed event', function (done) {
       this.queue = new Queue('test');
-      var worker = new Queue('test');
-      var queueEvent = false;
+      const worker = new Queue('test');
+      let queueEvent = false;
 
-      var job = this.queue.createJob({foo: 'bar'});
+      const job = this.queue.createJob({foo: 'bar'});
       job.on('failed', (err) => {
         assert.isTrue(queueEvent);
         assert.strictEqual(err.message, 'fail!');
@@ -1439,11 +1447,11 @@ describe('Queue', function () {
 
     it('emits a job progress event', function (done) {
       this.queue = new Queue('test');
-      var worker = new Queue('test');
-      var reportedProgress = false;
-      var queueEvent = false;
+      const worker = new Queue('test');
+      let reportedProgress = false;
+      let queueEvent = false;
 
-      var job = this.queue.createJob({foo: 'bar'});
+      const job = this.queue.createJob({foo: 'bar'});
       job.on('progress', (progress) => {
         assert.isTrue(queueEvent);
         assert.strictEqual(progress, 20);
@@ -1472,11 +1480,11 @@ describe('Queue', function () {
 
     it('emits a job retrying event', function (done) {
       this.queue = new Queue('test');
-      var worker = new Queue('test');
-      var retried = false;
-      var queueEvent = false;
+      const worker = new Queue('test');
+      let retried = false;
+      let queueEvent = false;
 
-      var job = this.queue.createJob({foo: 'bar'}).retries(1);
+      const job = this.queue.createJob({foo: 'bar'}).retries(1);
       job.on('retrying', (err) => {
         assert.strictEqual(job.options.retries, 0);
         assert.strictEqual(err.message, 'failing to retry');
@@ -1508,11 +1516,11 @@ describe('Queue', function () {
       this.queue = new Queue('test', {
         getEvents: false
       });
-      var worker = new Queue('test');
+      const worker = new Queue('test');
 
       assert.isUndefined(this.queue.eclient);
 
-      var job = this.queue.createJob({foo: 'bar'});
+      const job = this.queue.createJob({foo: 'bar'});
       job.on('succeeded', () => {
         assert.fail();
       });
@@ -1526,7 +1534,7 @@ describe('Queue', function () {
 
     it('are not sent when sendEvents is false', function (done) {
       this.queue = new Queue('test');
-      var worker = new Queue('test', {
+      const worker = new Queue('test', {
         sendEvents: false
       });
 
@@ -1544,12 +1552,12 @@ describe('Queue', function () {
 
     it('properly emits events with multiple jobs', function (done) {
       this.queue = new Queue('test');
-      var worker = new Queue('test');
+      const worker = new Queue('test');
 
-      var reported = 0;
-      var jobIds = new Set();
-      var job1 = this.queue.createJob({foo: 'bar'});
-      var job2 = this.queue.createJob({foo: 'baz'});
+      let reported = 0;
+      const jobIds = new Set();
+      const job1 = this.queue.createJob({foo: 'bar'});
+      const job2 = this.queue.createJob({foo: 'baz'});
       job1.on('succeeded', (result) => {
         assert.strictEqual(result, 'barbar');
         next();
