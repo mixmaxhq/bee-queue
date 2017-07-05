@@ -107,6 +107,14 @@ describe('Queue', function () {
           .then(() => this.queue.close());
       });
 
+      it('should not fail after a second call', function () {
+        this.queue = new Queue('test');
+
+        return this.queue.ready()
+          .then(() => this.queue.close())
+          .then(() => this.queue.close());
+      });
+
       it('should stop processing even with a redis retry strategy', function () {
         this.queue = new Queue('test', {
           redis: {
