@@ -21,6 +21,7 @@
   },
   "scripts": {
     "test": "grunt test",
+    "eslint": "grunt eslint",
     "coverage": "istanbul cover _mocha --report lcovonly",
     "publish-coverage": "coveralls < coverage/lcov.info && rm -rf coverage",
     "report": "npm run coverage && istanbul report html",
