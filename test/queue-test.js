@@ -1542,7 +1542,7 @@ describe('Queue', function () {
       var worker = new Queue('test');
 
       var reported = 0;
-      var jobIdSum = 0;
+      var jobIds = new Set();
       var job1 = this.queue.createJob({foo: 'bar'});
       var job2 = this.queue.createJob({foo: 'baz'});
       job1.on('succeeded', (result) => {
@@ -1554,7 +1554,7 @@ describe('Queue', function () {
         next();
       });
       this.queue.on('job succeeded', (id) => {
-        jobIdSum += id;
+        jobIds.add(id);
       });
       job1.save();
       job2.save();
@@ -1562,6 +1562,7 @@ describe('Queue', function () {
       function next() {
         reported += 1;
         if (reported < 2) return;
+        assert.deepEqual(jobIds, new Set(['1', '2']));
         assert.strictEqual(reported, 2);
         worker.close(done);
       }
