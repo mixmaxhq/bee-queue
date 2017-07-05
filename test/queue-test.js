@@ -1245,28 +1245,33 @@ describe('Queue', function () {
       return final;
     });
 
-    xit('should reset without a callback', function (done) {
+    it('should reset without a callback', function (done) {
       const deadQueue = new Queue('test', {
         stallInterval: 0
       });
+
+      // Disable stall prevention for the dead queue.
+      sinon.stub(deadQueue, '_preventStall', () => Promise.resolve());
 
       const processJobs = () => {
         this.queue = new Queue('test', {
           stallInterval: 0
         });
-        var reportDone = barrier(3, done);
-        this.queue.checkStalledJobs();
-        setTimeout(() => {
+        const reportDone = barrier(3, done);
+        this.queue.checkStalledJobs().then(() => {
+          const expected = new Set(['bar1', 'bar2', 'bar3']);
           this.queue.process((job, jobDone) => {
+            assert.isTrue(expected.has(job.data.foo));
+            expected.delete(job.data.foo);
             reportDone();
             jobDone();
           });
-        }, 20);
+        }).catch(done);
       };
 
       const processAndClose = () => {
         deadQueue.process(() => {
-          deadQueue.close(processJobs);
+          processJobs();
         });
       };
 
@@ -1277,7 +1282,7 @@ describe('Queue', function () {
       ]).then(() => processAndClose()).catch(done);
     });
 
-    xit('should reset with an interval', function (done) {
+    it('should reset with an interval', function (done) {
       const deadQueue = new Queue('test', {
         stallInterval: 0
       });
@@ -1298,9 +1303,9 @@ describe('Queue', function () {
         }, 20);
       };
 
-      var processAndClose = function () {
-        deadQueue.process(function () {
-          deadQueue.close(processJobs);
+      const processAndClose = () => {
+        deadQueue.process(() => {
+          processJobs();
         });
       };
 
