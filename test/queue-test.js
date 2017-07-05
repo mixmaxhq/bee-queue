@@ -804,7 +804,7 @@ describe('Queue', function () {
 
       this.queue.process(concurrency, (job, jobDone) => {
         assert.isTrue(this.queue.running <= concurrency);
-        setTimeout(function () {
+        setTimeout(() => {
           jobDone();
           counter++;
           if (counter === numJobs) {
@@ -831,7 +831,7 @@ describe('Queue', function () {
       var numJobs = 20;
       var processed = new Array(numJobs);
 
-      var handleJob = function (job, jobDone) {
+      const handleJob = (job, jobDone) => {
         jobDone();
       };
 
