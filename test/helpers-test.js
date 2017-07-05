@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 
 describe('helpers', function () {
   describe('waitOn', function () {
-    this.timeout(10);
+    this.timeout(100);
 
     beforeEach(function () {
       this.emitter = new Emitter();
