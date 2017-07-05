@@ -11,6 +11,7 @@ describe('Job', function () {
 
   function clearKeys(done) {
     this.queue.client.keys(this.queue.toKey('*'), (err, keys) => {
+      if (err) return done(err);
       if (keys.length) {
         this.queue.client.del(keys, done);
       } else {

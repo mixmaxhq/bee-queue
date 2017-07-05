@@ -29,6 +29,7 @@ describe('Queue', function () {
 
   function clearKeys(done) {
     pqueue.client.keys(pqueue.toKey('*'), (err, keys) => {
+      if (err) return done(err);
       if (keys.length) {
         pqueue.client.del(keys, done);
       } else {
@@ -334,7 +335,7 @@ describe('Queue', function () {
       if (err) return done(err);
       assert.ok(job.id);
       this.queue.client.hget('bq:test:jobs', job.id, (getErr, jobData) => {
-        assert.isNull(getErr);
+        if (getErr) return done(getErr);
         assert.strictEqual(jobData, job.toData());
         done();
       });
@@ -376,7 +377,7 @@ describe('Queue', function () {
 
       const job = this.queue.createJob({foo: 'bar'});
       job.save((err, job) => {
-        assert.isNull(err);
+        if (err) return done(err);
         assert.ok(job.id);
       });
     });
@@ -390,7 +391,7 @@ describe('Queue', function () {
       });
 
       const job = this.queue.createJob({foo: 'bar'});
-      job.save(function (err, job) {
+      job.save((err, job) => {
         if (err) return done(err);
         assert.ok(job.id);
       });
@@ -398,7 +399,7 @@ describe('Queue', function () {
       this.queue.once('succeeded', (job) => {
         assert.ok(job);
         this.queue.checkHealth((healthErr, counts) => {
-          assert.isNull(healthErr);
+          if (healthErr) return done(healthErr);
           assert.strictEqual(counts.succeeded, 1);
           done();
         });
@@ -414,15 +415,15 @@ describe('Queue', function () {
       });
 
       const job = this.queue.createJob({foo: 'bar'});
-      job.save(function (err, job) {
-        assert.isNull(err);
+      job.save((err, job) => {
+        if (err) return done(err);
         assert.ok(job.id);
       });
 
       this.queue.once('failed', (job) => {
         assert.ok(job);
         this.queue.checkHealth((healthErr, counts) => {
-          assert.isNull(healthErr);
+          if (healthErr) return done(healthErr);
           assert.strictEqual(counts.failed, 1);
           done();
         });
@@ -439,10 +440,10 @@ describe('Queue', function () {
 
       const createdJob = this.queue.createJob({foo: 'bar'});
       createdJob.save((err, createdJob) => {
-        assert.isNull(err);
+        if (err) return done(err);
         assert.ok(createdJob.id);
         this.queue.getJob(createdJob.id, (getErr, job) => {
-          assert.isNull(getErr);
+          if (getErr) return done(getErr);
           assert.strictEqual(job.toData(), createdJob.toData());
           done();
         });
@@ -466,10 +467,10 @@ describe('Queue', function () {
 
       const job = this.queue.createJob({foo: 'bar'});
       job.save((err, createdJob) => {
-        assert.isNull(err);
+        if (err) return done(err);
         assert.ok(createdJob.id);
-        reader.getJob(createdJob.id, function (getErr, job) {
-          assert.isNull(getErr);
+        reader.getJob(createdJob.id, (getErr, job) => {
+          if (getErr) return done(getErr);
           assert.strictEqual(job.toData(), createdJob.toData());
           done();
         });
@@ -506,8 +507,8 @@ describe('Queue', function () {
       });
 
       const job = this.queue.createJob({foo: 'bar'});
-      job.save(function (err, job) {
-        assert.isNull(err);
+      job.save((err, job) => {
+        if (err) return done(err);
         assert.ok(job.id);
         assert.strictEqual(job.data.foo, 'bar');
       });
@@ -516,6 +517,7 @@ describe('Queue', function () {
         assert.ok(job);
         assert.strictEqual(data, 'baz');
         job.isInSet('succeeded', (err, isMember) => {
+          if (err) return done(err);
           assert.isTrue(isMember);
           done();
         });
@@ -533,14 +535,14 @@ describe('Queue', function () {
       });
 
       this.queue.createJob({foo: 'bar'}).save((err, job) => {
-        assert.isNull(err);
+        if (err) return done(err);
         assert.ok(job.id);
         assert.strictEqual(job.data.foo, 'bar');
       });
 
       this.queue.once('succeeded', (job) => {
         this.queue.client.hget(this.queue.toKey('jobs'), job.id, (err, jobData) => {
-          assert.isNull(err);
+          if (err) return done(err);
           assert.isNull(jobData);
           done();
         });
@@ -556,8 +558,8 @@ describe('Queue', function () {
       });
 
       const job = this.queue.createJob({foo: 'bar'});
-      job.save(function (err, job) {
-        assert.isNull(err);
+      job.save((err, job) => {
+        if (err) return done(err);
         assert.ok(job.id);
         assert.strictEqual(job.data.foo, 'bar');
       });
@@ -567,6 +569,7 @@ describe('Queue', function () {
         assert.strictEqual(job.data.foo, 'bar');
         assert.strictEqual(err.message, 'failed!');
         job.isInSet('failed', (err, isMember) => {
+          if (err) return done(err);
           assert.isTrue(isMember);
           done();
         });
@@ -586,7 +589,7 @@ describe('Queue', function () {
       });
 
       this.queue.createJob({foo: 'bar'}).save((err, job) => {
-        assert.isNull(err);
+        if (err) return done(err);
         assert.ok(job.id);
         assert.strictEqual(job.data.foo, 'bar');
       });
@@ -626,7 +629,7 @@ describe('Queue', function () {
       });
 
       this.queue.createJob({foo: 'bar'}).save((err, job) => {
-        assert.isNull(err);
+        if (err) return done(err);
         assert.ok(job.id);
         assert.strictEqual(job.data.foo, 'bar');
       });
@@ -641,7 +644,7 @@ describe('Queue', function () {
       });
 
       this.queue.createJob({foo: 'bar'}).timeout(10).save((err, job) => {
-        assert.isNull(err);
+        if (err) return done(err);
         assert.ok(job.id);
         assert.strictEqual(job.data.foo, 'bar');
         assert.strictEqual(job.options.timeout, 10);
@@ -673,7 +676,7 @@ describe('Queue', function () {
       });
 
       this.queue.createJob({foo: 'bar'}).retries(retries).save((err, job) => {
-        assert.isNull(err);
+        if (err) return done(err);
         assert.ok(job.id);
         assert.strictEqual(job.data.foo, 'bar');
         assert.strictEqual(job.options.retries, retries);
@@ -705,7 +708,7 @@ describe('Queue', function () {
       });
 
       this.queue.createJob({foo: 'bar'}).timeout(10).retries(retries).save((err, job) => {
-        assert.isNull(err);
+        if (err) return done(err);
         assert.ok(job.id);
         assert.strictEqual(job.data.foo, 'bar');
         assert.strictEqual(job.options.retries, retries);
@@ -1279,7 +1282,7 @@ describe('Queue', function () {
         stallInterval: 0
       });
 
-      deadQueue.on('error', () => {});
+      deadQueue.on('error', done);
 
       const processJobs = () => {
         this.queue = new Queue('test', {
