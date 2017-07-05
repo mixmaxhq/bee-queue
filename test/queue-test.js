@@ -61,6 +61,20 @@ describe('Queue', function () {
     this.queue.ready(done);
   });
 
+  it('should indicate whether it is running', function () {
+    this.queue = new Queue('test');
+
+    // The queue should be "running" immediately - different from ready because it can accept jobs
+    // immediately.
+    assert.isTrue(this.queue.isRunning());
+    return this.queue.ready()
+      .then(() => {
+        assert.isTrue(this.queue.isRunning());
+        return this.queue.close();
+      })
+      .then(() => assert.isFalse(this.queue.isRunning()));
+  });
+
   describe('Connection', function () {
     beforeEach(closeQueue);
     afterEach(closeQueue);
