@@ -1,4 +1,3 @@
-/*eslint-disable no-shadow, handle-callback-err */
 
 var Queue = require('../lib/queue');
 var barrier = require('../lib/helpers').barrier;

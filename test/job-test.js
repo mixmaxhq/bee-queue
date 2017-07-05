@@ -1,5 +1,3 @@
-/*eslint-disable no-shadow, handle-callback-err */
-
 var Job = require('../lib/job');
 var Queue = require('../lib/queue');
 const helpers = require('../lib/helpers');
