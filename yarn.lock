@@ -595,7 +595,7 @@ getpass@^0.1.1:
   dependencies:
     assert-plus "^1.0.0"
 
-glob@7.1.1, glob@^7.0.3:
+glob@7.1.1:
   version "7.1.1"
   resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.1.tgz#805211df04faaf1c63a3600306cdf5ade50b2ec8"
   dependencies:
@@ -616,7 +616,7 @@ glob@^5.0.15, glob@~5.0.0:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@^7.1.2:
+glob@^7.0.3, glob@^7.1.2:
   version "7.1.2"
   resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.2.tgz#c19c9df9a028702d678612384a6552404c636d15"
   dependencies:
@@ -1335,9 +1335,9 @@ progress@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/progress/-/progress-2.0.0.tgz#8a1be366bf8fc23db2bd23f10c6fe920b4389d1f"
 
-promise-callbacks@^2.1.3:
-  version "2.1.3"
-  resolved "https://registry.yarnpkg.com/promise-callbacks/-/promise-callbacks-2.1.3.tgz#8643e821f8485b995f0c1a6938a6d7d0e4ef3089"
+promise-callbacks@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/promise-callbacks/-/promise-callbacks-3.0.0.tgz#93a375b7e3d55e88175638d5593784001488978b"
   dependencies:
     object.getownpropertydescriptors "2.0.3"
 
