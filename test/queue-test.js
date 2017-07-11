@@ -1087,6 +1087,29 @@ describe('Queue', function () {
         .then(() => success)
         .then(() => this.queue2.close());
     });
+
+    it('should process the delayed job the first time it was created', function () {
+      this.queue = new Queue('test', {
+        getEvents: false,
+        sendEvents: false,
+        processDelayed: true
+      });
+
+      const processSpy = sinon.spy(() => Promise.resolve());
+      this.queue.process(processSpy);
+
+      const success = helpers.waitOn(this.queue, 'succeeded', true);
+
+      return this.queue.ready()
+        .then(() => {
+          this.start = Date.now();
+          return this.queue.createJob({is: 'delayed'}).setId('awesomejob').delayUntil(this.start + 150).save();
+        })
+        .then(() => helpers.delay(Date.now() - this.start + 75))
+        // Verify that we don't overwrite the job.
+        .then(() => this.queue.createJob({is: 'delayed'}).setId('awesomejob').delayUntil(this.start + 10000).save())
+        .then(() => success);
+    });
   });
 
   describe('Backoff', function () {
