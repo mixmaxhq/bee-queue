@@ -4,7 +4,16 @@ const sinon = require('sinon');
 const assert = require('chai').assert;
 
 const helpers = require('../lib/helpers');
-const barrier = helpers.barrier;
+
+// Effectively _.after
+function barrier(n, done) {
+  return () => {
+    n -= 1;
+    if (n === 0) {
+      done();
+    }
+  };
+}
 
 describe('Queue', function () {
   const pqueue = new Queue('test', {
@@ -542,6 +551,33 @@ describe('Queue', function () {
           done();
         });
       });
+    });
+
+    it('should process a job with a non-numeric id', function () {
+      this.queue = new Queue('test', {
+        getEvents: false,
+        sendEvents: false,
+        storeJobs: false,
+      });
+
+      this.queue.process((job) => {
+        assert.strictEqual(job.id, 'amazingjob');
+        assert.strictEqual(job.data.foo, 'baz');
+        return Promise.resolve();
+      });
+
+      const success = helpers.waitOn(this.queue, 'succeeded', true);
+
+      return this.queue.createJob({foo: 'baz'}).setId('amazingjob').save()
+        .then(() => success)
+        .then(() => this.queue.getJob('amazingjob'))
+        .then((job) => {
+          assert.ok(job);
+          assert.strictEqual(job.id, 'amazingjob');
+          assert.deepEqual(job.data, {foo: 'baz'});
+          return job.isInSet('succeeded');
+        })
+        .then((isMember) => assert.isTrue(isMember));
     });
 
     it('processes a job with removeOnSuccess', function (done) {
