@@ -18,7 +18,7 @@ local stallTime = tonumber(redis.call("get", KEYS[1]) or 0)
 
 if now < stallTime then
   -- hasn't been long enough (stallInterval) since last check
-  return 0
+  return {}
 end
 
 -- reset any stalling jobs by moving from active to waiting
