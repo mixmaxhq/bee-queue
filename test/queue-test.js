@@ -967,6 +967,10 @@ describe('Queue', function () {
         });
     });
 
+    // This test cannot be as strict as we'd like, because we're dealing with the constraints of
+    // distributed systems and inconsistent clocks. As such, we can't reject delayed publish
+    // notifications, so if our local redis has a delayed publish, it'll show up and trigger an
+    // extra raiseDelayedJobs invocation.
     it('should process two proximal delayed jobs', function () {
       this.queue = new Queue('test', {
         processDelayed: true,
@@ -987,23 +991,24 @@ describe('Queue', function () {
       const successSpy = sinon.spy();
       this.queue.on('succeeded', successSpy);
 
-      this.queue.ready().then(() => {
-        sinon.spy(this.queue, '_evalScript');
-      });
 
-      const start = Date.now();
-      return Promise.all([
-        this.queue.createJob({is: 'early'}).delayUntil(start + 10).save(),
+      return this.queue.ready()
+        .then(() => {
+          sinon.spy(this.queue, '_evalScript');
+          this.start = Date.now();
+          return Promise.all([
+            this.queue.createJob({is: 'early'}).delayUntil(this.start + 10).save(),
 
-        // These should process together.
-        this.queue.createJob({is: 'late', uid: 1}).delayUntil(start + 200).save(),
-        this.queue.createJob({is: 'late', uid: 2}).delayUntil(start + 290).save(),
-      ])
+            // These should process together.
+            this.queue.createJob({is: 'late', uid: 1}).delayUntil(this.start + 200).save(),
+            this.queue.createJob({is: 'late', uid: 2}).delayUntil(this.start + 290).save(),
+          ]);
+        })
         .then(() => helpers.waitOn(this.queue, 'succeeded', true))
         .then(() => helpers.waitOn(this.queue, 'succeeded', true))
         .then(() => helpers.waitOn(this.queue, 'succeeded', true))
         .then(() => {
-          assert.isTrue(Date.now() >= start + 290);
+          assert.isTrue(Date.now() >= this.start + 290);
           assert.isTrue(processSpy.calledThrice);
           assert.deepEqual(processSpy.firstCall.args[0].data, {is: 'early'});
           assert.deepEqual(processSpy.secondCall.args[0].data.is, 'late');
@@ -1012,12 +1017,6 @@ describe('Queue', function () {
           assert.deepEqual(successSpy.firstCall.args[0].data, {is: 'early'});
           assert.deepEqual(successSpy.secondCall.args[0].data.is, 'late');
           assert.deepEqual(successSpy.thirdCall.args[0].data.is, 'late');
-          let calls = 0;
-          for (let i = 0; i < this.queue._evalScript.callCount; ++i) {
-            const call = this.queue._evalScript.getCall(i);
-            calls += call.args[0] === 'raiseDelayedJobs';
-          }
-          assert.strictEqual(calls, 2);
           if (errorSpy.called) {
             throw errorSpy.firstCall.args[0];
           }
