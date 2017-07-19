@@ -1168,6 +1168,79 @@ describe('Queue', (it) => {
 
       t.context.handleErrors(t);
     });
+
+    it('should not restart jobs that run longer than stallInterval', async(t) => {
+      const queue = t.context.makeQueue({
+        stallInterval: 60
+      });
+
+      const processDoneSpy = sinon.spy();
+      queue.process(async() => {
+        await helpers.delay(200);
+        processDoneSpy();
+      });
+
+      queue.on('stalled', () => t.fail('the job should not stall'));
+
+      const success = helpers.waitOn(queue, 'succeeded', true);
+
+      await queue.createJob({hello: true}).save();
+      await success;
+      t.true(processDoneSpy.calledOnce);
+
+      t.context.handleErrors(t);
+    });
+
+    it('should not restart jobs that run longer than stallInterval with multiple workers', async(t) => {
+      const queue = t.context.makeQueue({stallInterval: 60});
+      const queue2 = t.context.makeQueue({stallInterval: 60});
+      const queue3 = t.context.makeQueue({stallInterval: 60});
+
+      const processDoneSpy = sinon.spy();
+      queue.process(async() => {
+        await helpers.delay(200);
+        processDoneSpy();
+      });
+
+      queue.on('stalled', () => t.fail('the job should not stall'));
+      queue2.on('stalled', () => t.fail('the job should not stall'));
+      queue3.on('stalled', () => t.fail('the job should not stall'));
+
+      const success = helpers.waitOn(queue, 'succeeded', true);
+
+      await queue.createJob({hello: true}).save();
+      await success;
+
+      t.true(processDoneSpy.calledOnce);
+
+      t.context.handleErrors(t);
+    });
+
+    it('should not restart jobs that run longer than stallInterval with a custom id', async(t) => {
+      const queue = t.context.makeQueue({
+        stallInterval: 60,
+        removeOnSuccess: true
+      });
+
+      const processDoneSpy = sinon.spy();
+      queue.process(async() => {
+        await helpers.delay(200);
+        processDoneSpy();
+      });
+
+      queue.on('stalled', () => t.fail('the job should not stall'));
+
+      let success = helpers.waitOn(queue, 'succeeded', true);
+
+      await queue.createJob({hello: 1}).setId('processqueue').save();
+      await success;
+      success = helpers.waitOn(queue, 'succeeded', true);
+      await queue.createJob({hello: 2}).setId('processqueue').save();
+      await success;
+      t.true(processDoneSpy.calledTwice);
+
+      t.context.handleErrors(t);
+    });
   });
 
   it.describe('Startup', (it) => {
