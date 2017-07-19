@@ -1,4 +1,4 @@
-import test, {describe} from 'ava-spec';
+import {describe} from 'ava-spec';
 import sandbox from 'sandboxed-module';
 import lolex from 'lolex';
 import sinon from 'sinon';
@@ -25,7 +25,6 @@ describe('EagerTimer', (it) => {
   });
 
   it('should trigger in the future', (t) => {
-    // console.log('firstd');
     const {clock, timer, start, trigger} = t.context;
 
     timer.schedule(start + 200);
@@ -35,7 +34,6 @@ describe('EagerTimer', (it) => {
   });
 
   it('should not trigger after the maximum delay', (t) => {
-    // console.log('firste');
     const {clock, timer, start, trigger} = t.context;
 
     timer.schedule(start + 600);
