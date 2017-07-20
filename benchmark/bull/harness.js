@@ -16,10 +16,13 @@ function reef(n = 1) {
   };
 }
 
-module.exports = async (options) => {
+module.exports = (options) => {
   const {done, next} = reef(options.numRuns);
 
-  queue.process(options.concurrency, async () => next());
+  queue.process(options.concurrency, () => {
+    next();
+    return Promise.resolve();
+  });
 
   const startTime = Date.now();
   for (let i = 0; i < options.numRuns; ++i) {

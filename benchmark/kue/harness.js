@@ -16,7 +16,7 @@ function reef(n = 1) {
   };
 }
 
-module.exports = async (options) => {
+module.exports = (options) => {
   const {done, next} = reef(options.numRuns);
 
   queue.process('test', options.concurrency, (job, jobDone) => {
