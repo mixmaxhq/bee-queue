@@ -1,6 +1,8 @@
 const helpers = require('../../lib/helpers');
 const Queue = require('../..');
-const queue = new Queue('test');
+const queue = new Queue('test', {
+  removeOnSuccess: true
+});
 
 // A promise-based barrier.
 function reef(n = 1) {

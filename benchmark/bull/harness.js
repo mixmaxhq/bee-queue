@@ -23,7 +23,7 @@ module.exports = async (options) => {
 
   const startTime = Date.now();
   for (let i = 0; i < options.numRuns; ++i) {
-    queue.add({i});
+    queue.add({i}, {removeOnComplete: true});
   }
   return done.then(() => {
     const elapsed = Date.now() - startTime;
