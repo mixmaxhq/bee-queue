@@ -25,7 +25,8 @@ module.exports = async (options) => {
   for (let i = 0; i < options.numRuns; ++i) {
     queue.createJob({i}).save();
   }
-  await done;
-
-  return Date.now() - startTime;
+  return done.then(() => {
+    const elapsed = Date.now() - startTime;
+    return queue.close().then(() => elapsed);
+  });
 };

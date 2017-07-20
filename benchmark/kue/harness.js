@@ -28,7 +28,10 @@ module.exports = async (options) => {
   for (let i = 0; i < options.numRuns; ++i) {
     queue.create('test', {i}).save();
   }
-  await done;
-
-  return Date.now() - startTime;
+  return done.then(() => {
+    const elapsed = Date.now() - startTime;
+    const promise = helpers.deferred();
+    queue.shutdown(promise.defer());
+    return promise.then(() => elapsed);
+  });
 };
