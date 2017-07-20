@@ -1,26 +1,31 @@
-var Queue = require('bull');
-var queue = new Queue('test');
+const helpers = require('../../lib/helpers');
+const Queue = require('bull');
+const queue = new Queue('test');
 
-module.exports = function (options, cb) {
-  var finished = 0;
-  var finishTime, startTime;
-
-  var reportResult = function (result) {
-    finished += 1;
-    if (finished === options.numRuns) {
-      finishTime = (new Date()).getTime();
-      cb(null, finishTime - startTime);
+// A promise-based barrier.
+function reef(n = 1) {
+  const done = helpers.deferred(), end = done.defer();
+  return {
+    done,
+    next() {
+      --n;
+      if (n < 0) return false;
+      if (n === 0) end();
+      return true;
     }
   };
+}
 
-  queue.process(options.concurrency, function (job, done) {
-    reportResult();
-    return done();
-  });
+module.exports = async (options) => {
+  const {done, next} = reef(options.numRuns);
 
-  startTime = (new Date()).getTime();
+  queue.process(options.concurrency, async () => next());
 
-  for (var i = 0; i < options.numRuns; i++) {
-    queue.add({i: i});
+  const startTime = Date.now();
+  for (let i = 0; i < options.numRuns; ++i) {
+    queue.add({i});
   }
+  await done;
+
+  return Date.now() - startTime;
 };
